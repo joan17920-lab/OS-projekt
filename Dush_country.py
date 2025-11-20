@@ -8,13 +8,14 @@ from dash.dependencies import Input, Output, State
 # Läs in data
 path = os.path.join(os.getcwd(),"data","athlete_events.csv")
 os_data = pd.read_csv(path)
+# Anonymisera kolumnen med idrottarnas namn med hashfunktionen SHA-256
 os_data["Name_hash"]=os_data["Name"].apply(lambda x: hashlib.sha256(x.encode()).hexdigest())
 os_hash_name = os_data.drop(columns="Name")
 
 # Bygg Dash App
 app = Dash(__name__, suppress_callback_exceptions=True)
-# Bygg layout
-app.layout = html.Div([
+# Bygg layout för land
+country_layout = html.Div([
     html.H1('OS Dashbord'),
     html.H2('Landstatistik'),
     # Menu för att välja en land
@@ -39,7 +40,8 @@ app.layout = html.Div([
         value = 'topp10',
         placeholder="Välj en graf",
     ),
-    dcc.Graph(id="graph_output")
+    dcc.Graph(id="graph_output"),
+    dcc.Link('Till Sportstatistik', href='/sport')
 ])
 
 #   Skapa input och output  
@@ -66,12 +68,32 @@ def graph_output (country, c_graph):
         df_y = df.groupby("Year")["Medal"].count().reset_index()
         fig = px.bar(df_y, x="Year",y="Medal", title = "Numbel of medal per OS")
     elif c_graph == 'age':
-        fig = px.histogram(df, x = "Age",nbins =20, color = "Sex")
+        fig = px.histogram(df, x = "Age",nbins =20, color = "Sex",color_discrete_map={"F": "pink","M": "blue"},title="Åldersfördelning")
     else:
         return "Välj en graf"
     return fig
-    
+# Här kan bygg sida för sport
+sport_layout = about_layout = html.Div([
+    html.H1("Sport statistik"),
+    html.P("Bygg....."),
+    dcc.Link('Till ländstatistik', href='/country')
+])
 
+app.layout = html.Div([
 
+     dcc.Location(id = 'url',refresh = False),
+     html.Div(id = 'page-content')
+])
+@app.callback(
+     Output('page-content','children'),
+     Input('url','pathname')
+)
+def display_page(pathname):
+    if pathname == '/' or pathname =='/country':
+        return country_layout
+    elif pathname == '/sport':
+        return sport_layout
+    else:
+        return '"404 - Sidan kunde inte hittas'
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='127.0.0.1', port=8030, debug=True)
