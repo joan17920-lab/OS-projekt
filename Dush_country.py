@@ -6,12 +6,15 @@ from dash import Dash, html, dcc
 from dash.dependencies import Input, Output, State
 
 # Läs in data
-path = os.path.join(os.getcwd(),"data","athlete_events.csv")
-os_data = pd.read_csv(path)
+#path = os.path.join(os.getcwd(),"data","athlete_events.csv")
+#os_data = pd.read_csv(path)
+noc_region_df = pd.read_csv('Expriment/noc_regions.csv')
+athlete_events_df = pd.read_csv('Expriment/athlete_events.csv')
+os_data = pd.merge(athlete_events_df, noc_region_df, how='inner', on='NOC')
+
 # Anonymisera kolumnen med idrottarnas namn med hashfunktionen SHA-256
 os_data["Name_hash"]=os_data["Name"].apply(lambda x: hashlib.sha256(x.encode()).hexdigest())
 os_hash_name = os_data.drop(columns="Name")
-
 # Bygg Dash App
 app = Dash(__name__, suppress_callback_exceptions=True)
 # Bygg layout för land
@@ -72,21 +75,74 @@ def graph_output (country, c_graph):
     else:
         return "Välj en graf"
     return fig
+
 # Här kan bygg sida för sport
 sport_layout = about_layout = html.Div([
     html.H1("Sport statistik"),
-    html.P("Bygg....."),
+    html.P("Välj sport"),
+    dcc.Dropdown(id='sport_name',
+                   options=['Alpine Skiing', 
+                            'Football', 
+                            'Gymnastics', 
+                            "Handball"],
+                    value="Alpine Skiing"), # Default-värde
+    html.P("Välj plot"),                    
+    dcc.Dropdown(id='sport_plot',
+                   options=['Age distribution histogram', 
+                            'plot_medal_distribution', 
+                            'plot_age_by_gender', 
+                            "plot_events_by_year", 
+                            "plot_medals_per_athlete"],
+                    value="Age distribution histogram"), # Default-värde
+    dcc.Graph(id="graph_sport_output"),
     dcc.Link('Till ländstatistik', href='/country')
 ])
 
 app.layout = html.Div([
-
      dcc.Location(id = 'url',refresh = False),
      html.Div(id = 'page-content')
 ])
 @app.callback(
-     Output('page-content','children'),
-     Input('url','pathname')
+    Output('graph_sport_output','figure'),
+    [
+        Input('sport_name','value'),
+        Input('sport_plot','value'),
+    ]
+)
+def graph_sport_output (sport_name, sport_plot):
+    df = os_hash_name[os_hash_name["Sport"]==sport_name]
+
+    if sport_plot == "Age distribution histogram":
+        fig = px.histogram(df, x="Age", nbins=20)
+    
+    #elif sport_plot == "plot_medal_distribution":
+
+    elif sport_plot == "plot_age_by_gender":
+        px.box(x='Sex', y='Age', data=df)
+
+    #elif sport_plot == "plot_events_by_year":
+
+
+    elif sport_plot == "plot_medals_per_athlete":
+        MedalsPerCountry = df.groupby(by="region")["Medal"].count()
+        MedalsPerCountry_sorted = MedalsPerCountry.sort_values(ascending=False).reset_index()
+
+        AthletePerCountry = df.groupby(by="region")["ID"].count()
+        AthletePerCountry_sorted = AthletePerCountry.sort_values(ascending=False).reset_index()
+
+        MedalsPerContestant = pd.merge(MedalsPerCountry_sorted, AthletePerCountry_sorted, how="inner" )
+        MedalsPerContestant["Medal per ID %"] = 100 * MedalsPerContestant["Medal"] / MedalsPerContestant["ID"]  # Calculating medals per athlete quotient
+        MedalsPerContestant = MedalsPerContestant.sort_values(by="Medal per ID %", ascending=False).head(10)   # Excluding countries with lower quotient than 0.1%
+        fig = px.bar(MedalsPerContestant, x="Medal per ID %", y="region")
+
+    else: # Ska tas bort
+        fig = px.histogram(df, x = "Age",nbins =20, color = "Sex",color_discrete_map={"F": "pink","M": "blue"},title="Åldersfördelning")
+    
+    return fig
+
+@app.callback(
+    Output('page-content', 'children'),
+    Input('url', 'pathname')
 )
 def display_page(pathname):
     if pathname == '/' or pathname =='/country':
@@ -95,5 +151,6 @@ def display_page(pathname):
         return sport_layout
     else:
         return '"404 - Sidan kunde inte hittas'
+    
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8030, debug=True)
