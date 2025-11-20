@@ -6,10 +6,11 @@ from dash import Dash, html, dcc
 from dash.dependencies import Input, Output, State
 
 # Läs in data
-#path = os.path.join(os.getcwd(),"data","athlete_events.csv")
+path_noc_regions = os.path.join(os.getcwd(),"data","noc_regions.csv")
+path_athlete_events = os.path.join(os.getcwd(),"data","athlete_events.csv")
 #os_data = pd.read_csv(path)
-noc_region_df = pd.read_csv('Expriment/noc_regions.csv')
-athlete_events_df = pd.read_csv('Expriment/athlete_events.csv')
+noc_region_df = pd.read_csv(path_noc_regions)
+athlete_events_df = pd.read_csv(path_athlete_events)
 os_data = pd.merge(athlete_events_df, noc_region_df, how='inner', on='NOC')
 
 # Anonymisera kolumnen med idrottarnas namn med hashfunktionen SHA-256
