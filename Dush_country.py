@@ -29,18 +29,18 @@ card_style = {
     "boxShadow": "0 4px 8px rgba(0,0,0,0.1)",
     "backgroundColor": "lightsteelblue"
 }
-# Bygg layout för land
+# Bygg layout för landstatistik
 country_layout = html.Div([
     html.H1('OS Dashbord'),
     html.Div([
         html.H2('Landstatistik'),
-    # Menu för att välja en land
-        html.P("Välj a land"),
+    # Menu för välj ett land
+        html.P("Välj ett land"),
         dcc.RadioItems(
             id='country',
             options=[
                 {'label':'Alla länder','value':'all' },
-                {'label':'Östrike','value':'Austria'},
+                {'label':'Österrike','value':'Austria'},
                 ],
             value = 'all',
         )
@@ -119,7 +119,7 @@ sport_layout = about_layout = html.Div([
                             "plot_medals_per_athlete"],
                     value="plot_age_distribution"), # Default-värde
     dcc.Graph(id="graph_sport_output"),
-    dcc.Link('Till ländstatistik', href='/country')
+    dcc.Link('Till landstatistik', href='/country')
 ])
 
 @app.callback(
