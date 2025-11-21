@@ -16,37 +16,59 @@ os_data = pd.merge(athlete_events_df, noc_region_df, how='inner', on='NOC')
 # Anonymisera kolumnen med idrottarnas namn med hashfunktionen SHA-256
 os_data["Name_hash"]=os_data["Name"].apply(lambda x: hashlib.sha256(x.encode()).hexdigest())
 os_hash_name = os_data.drop(columns="Name")
+
 # Bygg Dash App
 app = Dash(__name__, suppress_callback_exceptions=True)
+
+#ChatGpt give Css card 
+card_style = {
+    "padding": "20px",
+    "margin": "10px",
+    "borderRadius": "10px",
+    "boxShadow": "0 4px 8px rgba(0,0,0,0.1)",
+    "backgroundColor": "lightsteelblue"
+}
 # Bygg layout för land
 country_layout = html.Div([
     html.H1('OS Dashbord'),
-    html.H2('Landstatistik'),
+    html.Div([
+        html.H2('Landstatistik'),
     # Menu för att välja en land
-    html.P("Välj a land"),
-    dcc.RadioItems(
-        id='country',
-        options=[
-            {'label':'Alla länder','value':'all' },
-            {'label':'Östrike','value':'Austria'},
-            ],
-        value = 'all',
-    ),
+        html.P("Välj a land"),
+        dcc.RadioItems(
+            id='country',
+            options=[
+                {'label':'Alla länder','value':'all' },
+                {'label':'Östrike','value':'Austria'},
+                ],
+            value = 'all',
+        )
+    ], style =card_style),
     # Menu för välj en graf
-    html.P("Välj en graf"),
-    dcc.Dropdown(
-        id = 'country_graph',
-        options = [
-            {'label':"Topp 10 sport",'value':"topp10"},
-            {'label':'Antal medaljer per OS','value':'medal'},
-            {'label':'Histogram över åldrar', 'value':'age'},
-            ],
-        value = 'topp10',
-        placeholder="Välj en graf",
-    ),
-    dcc.Graph(id="graph_output"),
-    dcc.Link('Till Sportstatistik', href='/sport')
-])
+    html.Div([
+        html.P("Välj en graf"),
+        dcc.Dropdown(
+            id = 'country_graph',
+            options = [
+                {'label':"Topp 10 sport",'value':"topp10"},
+                {'label':'Antal medaljer per OS','value':'medal'},
+                {'label':'Histogram över åldrar', 'value':'age'},
+                ],
+            value = 'topp10',
+            placeholder="Välj en graf",
+        )
+    ], style = card_style),
+    html.Div ([
+        dcc.Graph(id='graph_output')
+    ], style=card_style), 
+    html.Div([dcc.Link('Till Sportstatistik', href='/sport')], style = card_style)
+],
+style={
+    "backgroundColor": "#f2f2f2",
+    "padding": "20px"
+    }
+)
+
 
 #   Skapa input och output  
 @app.callback(
@@ -99,10 +121,6 @@ sport_layout = about_layout = html.Div([
     dcc.Link('Till ländstatistik', href='/country')
 ])
 
-app.layout = html.Div([
-     dcc.Location(id = 'url',refresh = False),
-     html.Div(id = 'page-content')
-])
 @app.callback(
     Output('graph_sport_output','figure'),
     [
@@ -140,6 +158,12 @@ def graph_sport_output (sport_name, sport_plot):
         fig = px.histogram(df, x = "Age",nbins =20, color = "Sex",color_discrete_map={"F": "pink","M": "blue"},title="Åldersfördelning")
     
     return fig
+
+# Layout för multipage  
+app.layout = html.Div([
+     dcc.Location(id = 'url',refresh = False),
+     html.Div(id = 'page-content')
+])
 
 @app.callback(
     Output('page-content', 'children'),
