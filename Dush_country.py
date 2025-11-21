@@ -4,6 +4,7 @@ import plotly.express as px
 import hashlib
 from dash import Dash, html, dcc
 from dash.dependencies import Input, Output, State
+from projekt.utils import graph_sport_output
 
 # Läs in data
 path_noc_regions = os.path.join(os.getcwd(),"data","noc_regions.csv")
@@ -111,52 +112,23 @@ sport_layout = about_layout = html.Div([
                     value="Alpine Skiing"), # Default-värde
     html.P("Välj plot"),                    
     dcc.Dropdown(id='sport_plot',
-                   options=['Age distribution histogram', 
+                   options=['plot_age_distribution', 
                             'plot_medal_distribution', 
                             'plot_age_by_gender', 
                             "plot_events_by_year", 
                             "plot_medals_per_athlete"],
-                    value="Age distribution histogram"), # Default-värde
+                    value="plot_age_distribution"), # Default-värde
     dcc.Graph(id="graph_sport_output"),
     dcc.Link('Till ländstatistik', href='/country')
 ])
 
 @app.callback(
     Output('graph_sport_output','figure'),
-    [
-        Input('sport_name','value'),
-        Input('sport_plot','value'),
-    ]
+    Input('sport_name','value'),
+    Input('sport_plot','value'),
 )
-def graph_sport_output (sport_name, sport_plot):
-    df = os_hash_name[os_hash_name["Sport"]==sport_name]
-
-    if sport_plot == "Age distribution histogram":
-        fig = px.histogram(df, x="Age", nbins=20)
-    
-    #elif sport_plot == "plot_medal_distribution":
-
-    elif sport_plot == "plot_age_by_gender":
-        px.box(x='Sex', y='Age', data=df)
-
-    #elif sport_plot == "plot_events_by_year":
-
-
-    elif sport_plot == "plot_medals_per_athlete":
-        MedalsPerCountry = df.groupby(by="region")["Medal"].count()
-        MedalsPerCountry_sorted = MedalsPerCountry.sort_values(ascending=False).reset_index()
-
-        AthletePerCountry = df.groupby(by="region")["ID"].count()
-        AthletePerCountry_sorted = AthletePerCountry.sort_values(ascending=False).reset_index()
-
-        MedalsPerContestant = pd.merge(MedalsPerCountry_sorted, AthletePerCountry_sorted, how="inner" )
-        MedalsPerContestant["Medal per ID %"] = 100 * MedalsPerContestant["Medal"] / MedalsPerContestant["ID"]  # Calculating medals per athlete quotient
-        MedalsPerContestant = MedalsPerContestant.sort_values(by="Medal per ID %", ascending=False).head(10)   # Excluding countries with lower quotient than 0.1%
-        fig = px.bar(MedalsPerContestant, x="Medal per ID %", y="region")
-
-    else: # Ska tas bort
-        fig = px.histogram(df, x = "Age",nbins =20, color = "Sex",color_discrete_map={"F": "pink","M": "blue"},title="Åldersfördelning")
-    
+def update_sport_graph(sport_name, sport_plot):
+    fig = graph_sport_output(os_hash_name, sport_name, sport_plot) 
     return fig
 
 # Layout för multipage  
