@@ -21,7 +21,7 @@ os_hash_name = os_data.drop(columns="Name")
 # Bygg Dash App
 app = Dash(__name__, suppress_callback_exceptions=True)
 
-#ChatGpt give Css card 
+#ChatGpt give  av Css card 
 card_style = {
     "padding": "20px",
     "margin": "10px",
@@ -56,7 +56,6 @@ country_layout = html.Div([
                 {'label':'Histogram över åldrar', 'value':'age'},
                 ],
             value = 'topp10',
-            placeholder="Välj en graf",
         )
     ], style = card_style),
     html.Div ([
@@ -85,8 +84,6 @@ def graph_output (country, c_graph):
         df = os_hash_name
     elif country =='Austria':
         df = os_hash_name[os_hash_name["Team"]=="Austria"]
-    else:
-            return "Välj ett land"
     
     if c_graph == 'topp10':
         df_topp10 = df.groupby("Sport")["Medal"].count().sort_values(ascending = False).reset_index().head(10)
@@ -96,38 +93,43 @@ def graph_output (country, c_graph):
         fig = px.bar(df_y, x="Year",y="Medal", title = "Numbel of medal per OS")
     elif c_graph == 'age':
         fig = px.histogram(df, x = "Age",nbins =20, color = "Sex",color_discrete_map={"F": "pink","M": "blue"},title="Åldersfördelning")
-    else:
-        return "Välj en graf"
     return fig
 
-# Här kan bygg sida för sport
+# layout för sports statistik
 sport_layout = about_layout = html.Div([
     html.H1("Sport statistik"),
-    html.P("Välj sport"),
-    dcc.Dropdown(id='sport_name',
-                   options=['Alpine Skiing', 
-                            'Football', 
-                            'Gymnastics', 
-                            "Handball"],
-                    value="Alpine Skiing"), # Default-värde
-    html.P("Välj plot"),                    
-    dcc.Dropdown(id='sport_plot',
-                   options=['plot_age_distribution', 
-                            'plot_medal_distribution', 
-                            'plot_age_by_gender', 
-                            "plot_events_by_year", 
-                            "plot_medals_per_athlete"],
-                    value="plot_age_distribution"), # Default-värde
-    dcc.Graph(id="graph_sport_output"),
-    dcc.Link('Till landstatistik', href='/country')
-])
+    html.Div([
+        html.P("Välj sport"),
+        dcc.Dropdown(id='sport_name',
+                    options=['Alpine Skiing', 
+                                'Football', 
+                                'Gymnastics', 
+                                "Handball"],
+                        value="Alpine Skiing")],style =card_style),
+    html.Div([
+        html.P("Välj plot"),                    
+        dcc.Dropdown(id='sport_plot',
+                    options=['plot_age_distribution', 
+                                'plot_medal_distribution', 
+                                'plot_age_by_gender', 
+                                "plot_events_by_year", 
+                                "plot_medals_per_athlete"],
+                        value="plot_age_distribution")], style =card_style),
+    html.Div([dcc.Graph(id="graph_sport_output")], style =card_style),
+    html.Div([dcc.Link('Till landstatistik', href='/country')],style =card_style)
+],
+style={
+    "backgroundColor": "#f2f2f2",
+    "padding": "20px"
+    }
+)
 
 @app.callback(
     Output('graph_sport_output','figure'),
     Input('sport_name','value'),
     Input('sport_plot','value'),
 )
-def update_sport_graph(sport_name, sport_plot):
+def update_sport_graph(sport_name, sport_plot): 
     fig = graph_sport_output(os_hash_name, sport_name, sport_plot) 
     return fig
 
@@ -147,7 +149,8 @@ def display_page(pathname):
     elif pathname == '/sport':
         return sport_layout
     else:
-        return '"404 - Sidan kunde inte hittas'
+        return '404 - Sidan kunde inte hittas'
     
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8030, debug=True)
+    # app.run(host='127.0.0.1', port=8030, debug=True)
+    app.run (debug = False)
