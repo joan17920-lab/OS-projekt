@@ -20,6 +20,7 @@ os_hash_name = os_data.drop(columns="Name")
 
 # Bygg Dash App
 app = Dash(__name__, suppress_callback_exceptions=True)
+server = app.server
 
 #ChatGpt give  av Css card 
 card_style = {
