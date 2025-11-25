@@ -7,9 +7,9 @@ from dash.dependencies import Input, Output, State
 from projekt.utils import graph_sport_output
 
 # Läs in data
-path_noc_regions = os.path.join(os.getcwd(),"data","noc_regions.csv")
-path_athlete_events = os.path.join(os.getcwd(),"data","athlete_events.csv")
-#os_data = pd.read_csv(path)
+rela_path = os.path.dirname(os.path.abspath(__file__))
+path_noc_regions = os.path.join(rela_path,"data","noc_regions.csv")
+path_athlete_events = os.path.join(rela_path,"data","athlete_events.csv")
 noc_region_df = pd.read_csv(path_noc_regions)
 athlete_events_df = pd.read_csv(path_athlete_events)
 os_data = pd.merge(athlete_events_df, noc_region_df, how='inner', on='NOC')
@@ -153,5 +153,5 @@ def display_page(pathname):
         return '404 - Sidan kunde inte hittas'
     
 if __name__ == '__main__':
-    # app.run(host='127.0.0.1', port=8030, debug=True)
+    #app.run(host='127.0.0.1', port=8030, debug=True)
     app.run (debug = False)
