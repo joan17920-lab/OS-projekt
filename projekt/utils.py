@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Funktionen för att plotta diagram
 def graph_sport_output (os_hash_name, sport_name, sport_plot): 
@@ -30,7 +31,49 @@ def graph_sport_output (os_hash_name, sport_name, sport_plot):
         MedalsPerContestant["Medal per ID %"] = 100 * MedalsPerContestant["Medal"] / MedalsPerContestant["ID"]  # Calculating medals per athlete quotient
         MedalsPerContestant = MedalsPerContestant.sort_values(by="Medal per ID %", ascending=False).head(10)   # Excluding countries with lower quotient than 0.1%
         fig = px.bar(MedalsPerContestant, x="Medal per ID %", y="region")
-
+    elif sport_plot == "plot_sankey_for_austria":
+        aust = df[df['region'] == 'Austria'].copy()
+ 
+        aust['Medal'] = aust['Medal'].fillna('No Medal')
+    
+        sexes = list(aust['Sex'].unique())
+        medals = list(aust['Medal'].unique())
+        years = list(aust['Year'].unique())
+    
+        labels = sexes + medals + years
+    
+        index_map = {label: i for i, label in enumerate(labels)}
+    
+        sex_to_medal = aust.groupby(['Sex', 'Medal']).size().reset_index(name='count')
+    
+        medal_to_year = aust.groupby(['Medal', 'Year']).size().reset_index(name='count')
+    
+        sources = []
+        targets = []
+        values = []
+    
+        for _, row in sex_to_medal.iterrows():
+            sources.append(index_map[row['Sex']])
+            targets.append(index_map[row['Medal']])
+            values.append(row['count'])
+    
+        for _, row in medal_to_year.iterrows():
+            sources.append(index_map[row['Medal']])
+            targets.append(index_map[row['Year']])
+            values.append(row['count'])
+    
+        fig = go.Figure(data=[go.Sankey(
+            node=dict(label=labels, pad=15, thickness=20),
+            link=dict(source=sources, target=targets, value=values)
+        )])
+    
+        fig.update_layout(title_text=f"Sankey Diagram – {sport_name} (Austria)", font_size=12)
+    elif sport_plot == "plot_best_result_age":
+        df_new = df.dropna(subset="Medal")
+        w_df = df_new.groupby("Year")["Age"].mean().reset_index()
+        fig = px.line(w_df, x="Year", y="Age")
+    elif sport_plot == "plot_age_distribution_by_sex":
+        fig = px.histogram(df.dropna(subset=["Age"]), x="Age", color="Sex", nbins=20)
     else:
         fig = px.histogram(df, x = "Age",nbins =20, color = "Sex",color_discrete_map={"F": "pink","M": "blue"},title="Åldersfördelning")
     

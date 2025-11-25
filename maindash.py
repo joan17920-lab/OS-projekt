@@ -7,14 +7,9 @@ from dash.dependencies import Input, Output
 from projekt.utils import graph_sport_output
 
 # Läs in data
-<<<<<<< HEAD
 rela_path = os.path.dirname(os.path.abspath(__file__))
 path_noc_regions = os.path.join(rela_path,"data","noc_regions.csv")
 path_athlete_events = os.path.join(rela_path,"data","athlete_events.csv")
-=======
-path_noc_regions = os.path.join(os.getcwd(),"data","noc_regions.csv")
-path_athlete_events = os.path.join(os.getcwd(),"data","athlete_events.csv")
->>>>>>> a75a22c78365db6a7d13c45f55d6038cb51bd43d
 noc_region_df = pd.read_csv(path_noc_regions)
 athlete_events_df = pd.read_csv(path_athlete_events)
 os_data = pd.merge(athlete_events_df, noc_region_df, how='inner', on='NOC')
@@ -119,6 +114,9 @@ sport_layout = about_layout = html.Div([
                                 'plot_medal_distribution', 
                                 'plot_age_by_gender', 
                                 "plot_events_by_year", 
+                                "plot_sankey_for_austria",
+                                "plot_best_result_age",
+                                "plot_age_distribution_by_sex",
                                 "plot_medals_per_athlete"],
                         value="plot_age_distribution")], style =card_style),
     html.Div([dcc.Graph(id="graph_sport_output")], style =card_style),
@@ -158,5 +156,6 @@ def display_page(pathname):
         return '404 - Sidan kunde inte hittas'
     
 if __name__ == '__main__':
-    #app.run(host='127.0.0.1', port=8030, debug=True)
-    app.run (debug = False)
+
+    app.run(host='127.0.0.1', port=8030, debug=True)
+    #app.run (debug = False)
