@@ -3,13 +3,12 @@ import os
 import plotly.express as px
 import hashlib
 from dash import Dash, html, dcc
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from projekt.utils import graph_sport_output
 
 # Läs in data
 path_noc_regions = os.path.join(os.getcwd(),"data","noc_regions.csv")
 path_athlete_events = os.path.join(os.getcwd(),"data","athlete_events.csv")
-#os_data = pd.read_csv(path)
 noc_region_df = pd.read_csv(path_noc_regions)
 athlete_events_df = pd.read_csv(path_athlete_events)
 os_data = pd.merge(athlete_events_df, noc_region_df, how='inner', on='NOC')
@@ -88,7 +87,7 @@ def graph_output (country, c_graph):
     
     if c_graph == 'topp10':
         df_topp10 = df.groupby("Sport")["Medal"].count().sort_values(ascending = False).reset_index().head(10)
-        fig = px.bar(df_topp10,x="Medal",y="Sport",color="Sport", title = "Topp10 Sport")
+        fig = px.bar(df_topp10,x="Medal",y="Sport",color="Sport", title = "Topp 10 Sport")
     elif c_graph == 'medal':
         df_y = df.groupby("Year")["Medal"].count().reset_index()
         fig = px.bar(df_y, x="Year",y="Medal", title = "Numbel of medal per OS")
